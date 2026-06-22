@@ -688,6 +688,22 @@
       max-width: 380px;
       padding: 20px;
     }
+    .spinner-group input {
+      width: 58px;
+      height: 58px;
+      font-size: 26px;
+    }
+    .spin-colon {
+      font-size: 22px;
+      margin: 0 1px 22px;
+    }
+    .spin-arrow {
+      width: 24px;
+      height: 18px;
+    }
+    .spinner-row {
+      gap: 2px;
+    }
   }
 
   @media (max-width: 700px) {
@@ -879,6 +895,7 @@
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + item.dataset.view).classList.add('active');
       updateBottomNav(item.dataset.view);
+      updateBrowserTitle();
     });
   });
   document.querySelector('.nav-item[data-view="timer-grid"]').classList.add('active');
@@ -899,6 +916,7 @@
       if (sideNavItem) sideNavItem.classList.add('active');
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + view).classList.add('active');
+      updateBrowserTitle();
     });
   });
 
@@ -913,6 +931,9 @@
 
   let timers = [];
   let nextId = 1;
+  let swRunning = false;
+  let swElapsed = 0;
+  let swStartTime = 0;
 
   function loadTimers() {
     const localData = localStorage.getItem('clock_app_timers');
@@ -947,6 +968,10 @@
     localStorage.setItem('clock_app_timers', JSON.stringify(dataToSave));
   }
 
+  function isAnyRunning() {
+    return timers.some(t => t.running) || swRunning;
+  }
+
   let editMode = false;
   const sound = document.getElementById('timer-sound');
   const grid = document.getElementById('timer-grid');
@@ -957,6 +982,28 @@
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+
+  function formatMS(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${pad(m)}:${pad(s)}`;
+  }
+
+  function updateBrowserTitle() {
+    let titleText = '時計';
+    const runningTimers = timers.filter(t => t.running && !t.finished);
+    if (runningTimers.length > 0) {
+      let latestTimer = runningTimers.reduce((prev, current) => (prev.id > current.id) ? prev : current);
+      const timeStr = formatHMS(latestTimer.remainingMs);
+      titleText = timeStr + ' - タイマー';
+    } else if (swRunning) {
+      const now = swElapsed + (performance.now() - swStartTime);
+      const timeStr = formatMS(now);
+      titleText = timeStr + ' - ストップウォッチ';
+    }
+    document.title = titleText;
   }
 
   function renderGrid() {
@@ -1068,9 +1115,11 @@
       syncVisual(t);
       try { sound.currentTime = 0; sound.play().catch(() => {}); } catch (e) {}
       showTimerToast(t);
+      updateBrowserTitle();
       return;
     }
     syncVisual(t);
+    updateBrowserTitle();
     t.rafId = requestAnimationFrame(() => tickTimer(t));
   }
 
@@ -1099,12 +1148,12 @@
       t.lastTick = performance.now();
       t.rafId = requestAnimationFrame(() => tickTimer(t));
       syncVisualNoTransition(t);
-      return;
     } else {
       t.running = false;
       cancelAnimationFrame(t.rafId);
+      syncVisual(t);
     }
-    syncVisual(t);
+    updateBrowserTitle();
   }
 
   function resetTimer(id) {
@@ -1115,6 +1164,7 @@
     cancelAnimationFrame(t.rafId);
     t.remainingMs = t.totalMs;
     syncVisualNoTransition(t);
+    updateBrowserTitle();
   }
 
   function deleteTimer(id) {
@@ -1123,6 +1173,7 @@
     timers = timers.filter(x => x.id !== id);
     saveTimers();
     renderGrid();
+    updateBrowserTitle();
   }
 
   function setEditMode(on) {
@@ -1244,6 +1295,7 @@
     saveTimers();
     renderGrid();
     overlay.classList.remove('active');
+    updateBrowserTitle();
   });
 
   (function () {
@@ -1276,7 +1328,12 @@
       const now = running ? elapsed + (performance.now() - startTime) : elapsed;
       const f = format(now);
       hEl.textContent = f.h; mEl.textContent = f.m; sEl.textContent = f.s; csEl.textContent = '.' + f.cs;
-      if (running) rafId = requestAnimationFrame(render);
+      if (running) {
+        swElapsed = elapsed;
+        swStartTime = startTime;
+        rafId = requestAnimationFrame(render);
+        updateBrowserTitle();
+      }
     }
 
     function setIconPause() { icon.className = 'fa-solid fa-pause'; }
@@ -1285,7 +1342,10 @@
     startBtn.addEventListener('click', () => {
       if (!running) {
         running = true;
+        swRunning = true;
         startTime = performance.now();
+        swStartTime = startTime;
+        elapsed = 0;
         startBtn.classList.add('is-running');
         setIconPause();
         lapBtn.disabled = false;
@@ -1293,11 +1353,13 @@
         render();
       } else {
         running = false;
+        swRunning = false;
         elapsed += performance.now() - startTime;
         cancelAnimationFrame(rafId);
         startBtn.classList.remove('is-running');
         setIconPlay();
         lapBtn.disabled = true;
+        updateBrowserTitle();
       }
     });
 
@@ -1310,6 +1372,7 @@
 
     resetBtn.addEventListener('click', () => {
       running = false;
+      swRunning = false;
       cancelAnimationFrame(rafId);
       elapsed = 0;
       laps = [];
@@ -1319,6 +1382,7 @@
       resetBtn.disabled = true;
       hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00'; csEl.textContent = '.00';
       renderLaps();
+      updateBrowserTitle();
     });
 
     function fmtFull(ms) {
@@ -1435,6 +1499,28 @@
       }
     });
   })();
+
+  window.addEventListener('beforeunload', function(e) {
+    if (isAnyRunning()) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  setInterval(() => {
+    updateBrowserTitle();
+  }, 1000);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const viewParam = urlParams.get('view');
+  if (viewParam === 'stopwatch' || viewParam === 'timer') {
+    const targetView = viewParam === 'timer' ? 'timer-grid' : 'stopwatch';
+    document.querySelectorAll('.nav-item[data-view], .bottom-nav-item[data-view]').forEach(item => {
+      item.classList.toggle('active', item.dataset.view === targetView);
+    });
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + targetView).classList.add('active');
+  }
 </script>
 </body>
 </html>
