@@ -37,6 +37,7 @@ Windows 11 標準の「時計」アプリを模した、シンプルなブラウ
   - [Font Awesome](https://fontawesome.com/)（アイコン表示）
   - [Google Fonts - BIZ UDPGothic](https://fonts.google.com/)（フォント）
 - データ永続化には `localStorage` を使用（サーバー・バックエンドは不要）
+- タイマー終了音は `alarm.wav`（同リポジトリ内に配置）を再生
 
 ## 使い方
 
@@ -52,9 +53,77 @@ Windows 11 標準の「時計」アプリを模した、シンプルなブラウ
 
 ```
 .
-└── index.html   # アプリ本体（HTML / CSS / JS をすべて含む単一ファイル）
+├── index.html   # アプリ本体（HTML / CSS / JS をすべて含む単一ファイル）
+├── alarm.wav    # タイマー終了時に再生されるアラーム音
+└── README.md
 ```
 
 ## ライセンス
 
-特に明記がない場合は、このリポジトリの内容は自由に利用・改変いただけます（必要に応じてライセンスを追記してください）。
+本リポジトリの内容は、個人的な学習・利用目的に限り閲覧・利用できます。**複製、再配布、公開（フォークしての公開や別リポジトリへの転載を含む）は禁止します。** 利用を希望される場合は、事前に作者にご連絡ください。
+
+---
+
+# Clock App
+
+A simple, browser-based clock application inspired by the native Windows 11 "Clock" app. Built as a single HTML file with no build step or dependencies required.
+
+## Demo
+
+Just open `index.html` in your browser to use it.
+
+## Features
+
+### Timer
+- Manage multiple timers as cards (ships with 1, 3, 5, and 10 minute presets by default)
+- Add, edit, and delete named timers
+- Circular progress ring showing remaining time
+- Delete timers via edit mode
+- Alarm sound and toast notification when a timer finishes
+- Timers are saved to `localStorage` and persist across page reloads
+
+### Stopwatch
+- Start, stop, and reset controls
+- Lap tracking (fastest and slowest laps are highlighted)
+- Displays time down to hundredths of a second
+
+### Settings
+- Switch app theme (Use system setting / Light / Dark)
+- Reset button to restore timers and app settings to their defaults
+
+### UI/UX
+- Responsive layout with a side nav (desktop) and bottom nav (mobile)
+- Light/dark theme toggle, with automatic system color scheme detection
+- Windows-style fonts, colors, and interactions
+
+## Tech Stack
+
+- Built with plain **HTML / CSS / JavaScript** only (no frameworks)
+- External resources:
+  - [Font Awesome](https://fontawesome.com/) for icons
+  - [Google Fonts - BIZ UDPGothic](https://fonts.google.com/) for typography
+- Uses `localStorage` for data persistence (no backend/server required)
+- Plays `alarm.wav` (included in this repo) when a timer finishes
+
+## Usage
+
+1. Clone or download this repository
+   ```bash
+   git clone <this-repo-url>
+   ```
+2. Open `index.html` in your browser
+
+No server setup is needed — it works by opening the file directly.
+
+## File Structure
+
+```
+.
+├── index.html   # The app itself (HTML / CSS / JS all in one file)
+├── alarm.wav    # Alarm sound played when a timer finishes
+└── README.md
+```
+
+## License
+
+The contents of this repository may be viewed and used for personal, non-commercial purposes only. **Copying, redistribution, and republishing (including public forks or reposting to other repositories) are not permitted.** Please contact the author before any other use.
