@@ -333,8 +333,9 @@
   .add-card span { font-size: 13px; }
 
   .fab-row {
-    position: absolute; right: 28px; bottom: 24px;
+    position: fixed; right: 28px; bottom: 24px;
     display: flex; gap: 10px;
+    z-index: 55;
   }
   .fab {
     width: 40px; height: 40px; border-radius: 50%;
@@ -684,7 +685,7 @@
     }
     .fab-row {
       right: 16px;
-      bottom: 80px;
+      bottom: 76px;
     }
     .dialog {
       width: 92%;
