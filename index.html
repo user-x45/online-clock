@@ -994,18 +994,20 @@
   let editMode = false;
   const sound = document.getElementById('timer-sound');
   let soundUnlocked = false;
+  let audioCtx = null;
 
   function unlockSound() {
     if (soundUnlocked) return;
     soundUnlocked = true;
-    sound.muted = true;
-    sound.play().then(() => {
-      sound.pause();
-      sound.currentTime = 0;
-      sound.muted = false;
-    }).catch(() => {
-      sound.muted = false;
-    });
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(audioCtx.destination);
+      src.start(0);
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) {}
   }
 
   const grid = document.getElementById('timer-grid');
