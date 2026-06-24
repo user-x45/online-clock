@@ -900,7 +900,7 @@
 <div class="toast-stack" id="toast-stack"></div>
 
 <audio id="timer-sound" preload="auto" loop>
-  <source src="https://user-x45.github.io/clock/alarm.wav" type="audio/wav">
+  <source src="alarm.wav" type="audio/wav">
 </audio>
 
 <script>
@@ -992,13 +992,13 @@
 
   let editMode = false;
   const sound = document.getElementById('timer-sound');
-  let soundUnlocked = false;
-  function unlockSound() {
-    if (soundUnlocked) return;
-    soundUnlocked = true;
-    const p = sound.play();
-    sound.pause();
+  let soundStarted = false;
+  function startSilentLoop() {
+    if (soundStarted) return;
+    soundStarted = true;
+    sound.muted = true;
     sound.currentTime = 0;
+    const p = sound.play();
     if (p && typeof p.catch === 'function') p.catch(() => {});
   }
   const grid = document.getElementById('timer-grid');
@@ -1140,7 +1140,7 @@
       t.running = false;
       t.finished = true;
       syncVisual(t);
-      try { sound.muted = false; sound.currentTime = 0; sound.play().catch(() => {}); } catch (e) {}
+      try { sound.currentTime = 0; sound.muted = false; } catch (e) {}
       showTimerToast(t);
       updateBrowserTitle();
       return;
@@ -1171,7 +1171,7 @@
       t.remainingMs = t.totalMs;
     }
     if (!t.running) {
-      unlockSound();
+      startSilentLoop();
       t.running = true;
       t.lastTick = performance.now();
       t.rafId = requestAnimationFrame(() => tickTimer(t));
@@ -1369,7 +1369,7 @@
 
     startBtn.addEventListener('click', () => {
       if (!running) {
-        unlockSound();
+        startSilentLoop();
         running = true;
         swRunning = true;
         startTime = performance.now();
@@ -1447,7 +1447,7 @@
 
   function stopAlarmSound() {
     try {
-      sound.pause();
+      sound.muted = true;
       sound.currentTime = 0;
     } catch (e) {}
   }
