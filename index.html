@@ -932,6 +932,10 @@
   <source src="alarm.wav" type="audio/wav">
 </audio>
 
+<audio id="start-sound" preload="auto">
+  <source src="silence.mp3" type="audio/mpeg">
+</audio>
+
 <script>
   function pad(n, len = 2) { return String(Math.max(0, Math.floor(n))).padStart(len, '0'); }
 
@@ -1021,9 +1025,7 @@
 
   let editMode = false;
   const sound = document.getElementById('timer-sound');
-  const unlockSound = new Audio(sound.querySelector('source').src);
-  unlockSound.volume = 0;
-  unlockSound.muted = true;
+  const startSound = document.getElementById('start-sound');
   const grid = document.getElementById('timer-grid');
 
   function formatHMS(ms) {
@@ -1197,11 +1199,8 @@
       t.running = true;
       t.lastTick = performance.now();
       try {
-        unlockSound.currentTime = 0;
-        unlockSound.play().then(() => {
-          unlockSound.pause();
-          unlockSound.currentTime = 0;
-        }).catch(() => {});
+        startSound.currentTime = 0;
+        startSound.play().catch(() => {});
       } catch (e) {}
       t.rafId = requestAnimationFrame(() => tickTimer(t));
       syncVisualNoTransition(t);
